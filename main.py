@@ -12,3 +12,5 @@ ds = pydicom.dcmread(file_list[i])
 
 plt.imshow(ds.pixel_array)
 plt.show()
+
+# matplotlib.pyplot ansehen
