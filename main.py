@@ -61,12 +61,9 @@ def main(path: str, coord_slice: int):
     ax1.set_ylabel("mean value")
     ax2.set_ylabel("SNR")
 
-
     #ax.grid(axis="y")
     fig.suptitle('Plot')
     #plt.axis([0, image_count, min(signal_mean_values) - min(signal_mean_values) % 20, max(signal_mean_values) + (20 - max(signal_mean_values) % 20)])
-    #plt.xlabel('scan')
-    #plt.ylabel('mean value')
     plt.show()
 
 main('012_fmre_40Hz_SS_11sl_TR1200', 3)
