@@ -2,7 +2,7 @@ from pydicom import dcmread
 import matplotlib.pyplot as plt
 from os import scandir
 import numpy as np
-from scipy.ndimage import binary_fill_holes, binary_erosion
+from scipy.ndimage import binary_fill_holes, binary_erosion, binary_dilation
 from math import sqrt, log10
 
 def main(path: str, coord_slice: int):
@@ -18,15 +18,17 @@ def main(path: str, coord_slice: int):
     images = [np.array([i[100:200] for i in dcmread(file_list[j]).pixel_array[100:200]]) for j in range(image_count)]
 
     # creating binary mask based to picture 0
-    mask_signal = images[0] > 100
-    mask_signal = binary_fill_holes(mask_signal).astype(int)
-    mask_signal = binary_erosion(mask_signal, iterations=3).astype(int)
+    masks_signal = [i > 100 for i in images]
+    masks_signal = [binary_fill_holes(i).astype(int) for i in masks_signal]
+    masks_signal = [binary_erosion(i, iterations=3).astype(int) for i in masks_signal]
+    masks_signal = [binary_dilation(i, iterations=3).astype(int) for i in masks_signal]
+
     # same with noise
     mask_noise = np.zeros((100, 100))
     mask_noise[0:20, 0:20] = 1
 
     # just like images, but with the mask_signal applied (and np.nan instead of 0)
-    signal_masked_images = [np.multiply(i, mask_signal).astype('float') for i in images]
+    signal_masked_images = [np.multiply(j, masks_signal[i]).astype('float') for i, j in enumerate(images)]
     for i, j in enumerate(signal_masked_images):
         signal_masked_images[i][signal_masked_images[i] == 0] = np.nan
     # same for mask_noise
@@ -47,8 +49,8 @@ def main(path: str, coord_slice: int):
     snr = [20 * log10(signal_mean_values[i] / noise_mean_values[i]) for i in range(image_count)]
 
     # plotting the data
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
     range_image_count = range(image_count + 1)[1:]
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex="col")
     ax1.plot(range_image_count, signal_mean_values, "b.-") # graph
     ax1.plot(range_image_count, [signal_mean for _ in range(image_count)], "m-") # mean
     ax1.plot(range_image_count, [signal_mean + signal_standartdeviation for _ in range(image_count)], "y-") # standart deviation upper
