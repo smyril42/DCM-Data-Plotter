@@ -17,13 +17,12 @@ def main(path: str, coord_slice: int):
     # creating a list  with every first 100 times 100 pixel out of every file
     images = [np.array([i[100:200] for i in dcmread(file_list[j]).pixel_array[100:200]]) for j in range(image_count)]
 
-    # creating binary mask based to picture 0
+    # creating binary mask based for every image
     masks_signal = [i > 100 for i in images]
     masks_signal = [binary_fill_holes(i).astype(int) for i in masks_signal]
     masks_signal = [binary_erosion(i, iterations=3).astype(int) for i in masks_signal]
     masks_signal = [binary_dilation(i, iterations=3).astype(int) for i in masks_signal]
-
-    # same with noise
+    # creating a mask for noise
     mask_noise = np.zeros((100, 100))
     mask_noise[0:20, 0:20] = 1
 
