@@ -9,7 +9,6 @@ from scipy.ndimage import binary_fill_holes, binary_erosion, binary_dilation
 from math import sqrt, log10
 import matplotlib.pyplot as plt
 
-
 def main(path: str, image_count: int, slices: int):
     start_time = time()
     # defining variables for objects that are used often
