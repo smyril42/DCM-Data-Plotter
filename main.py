@@ -8,9 +8,10 @@ import numpy as np
 from scipy.ndimage import binary_fill_holes, binary_erosion, binary_dilation
 from math import sqrt, log10
 import matplotlib.pyplot as plt
-start_time = time()
+
 
 def main(path: str, image_count: int, slices: int):
+    start_time = time()
     # defining variables for objects that are used often
     range_slices = list(range(slices))
     range_image_count = list(range(image_count))
@@ -53,7 +54,7 @@ def main(path: str, image_count: int, slices: int):
 
     # calculating SNR (SignalNoiseRatio)
     snr = [[get_snr(signal_mean_values[k][i], noise_mean_values[k][i]) for i in range_image_count] for k in range_slices]
-
+    print(signal_mean_values[0][0])
     # plotting the data
     range_image_count1 = range(image_count + 1)[1:] # array for the length of the y-axis
     fig, ax = plt.subplots(slices, 2, sharex='col', sharey='col')
@@ -76,18 +77,13 @@ def main(path: str, image_count: int, slices: int):
     plt.get_current_fig_manager().full_screen_toggle()
     plt.show()
 
+    print("Runtime: ", time() - start_time)
+
 def get_standard_deviation(values: list, mean=None, count=None):
     return sqrt(sum([(i-(mean if not mean else np.mean(values))) ** 2 for i in values]) / (count if count is not None else len(values)))
 
-def get_snr(values_signal, values_noise):
-    return 20 * log10(values_signal / values_noise)
+def get_snr(value_signal, value_noise):
+    return 20 * log10(value_signal / value_noise)
 
-main('012_fmre_40Hz_SS_11sl_TR1200', 155, 11)
-
-print("Runtime: ", time() - start_time)
-
-
-#import timeit
-#n = 5
-#result = timeit.timeit(stmt='main("012_fmre_40Hz_SS_11sl_TR1200", 155, 11)', globals=globals(), number=n)
-#print(f"Execution time is {result / n} seconds")
+if __name__ == '__main__':
+    main('012_fmre_40Hz_SS_11sl_TR1200', 155, 11)
