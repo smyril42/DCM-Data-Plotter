@@ -6,3 +6,7 @@
 - [x] alle slices gemeinsam plotten
 - [x] sieht schön aus
 - [ ] docu machen
+- [ ] mittelwerte  dingsbums
+- [x] mittelwerte dingsbums für mehrere gleichzeitig anzeigen
+- [ ] das drüber aber schön
+- [ ] mittelwerte dingsbums fpr alle slices

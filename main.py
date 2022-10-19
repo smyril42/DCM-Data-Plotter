@@ -6,7 +6,7 @@ from pydicom import dcmread
 from os import scandir
 import numpy as np
 from scipy.ndimage import binary_fill_holes, binary_erosion, binary_dilation
-from math import sqrt, log10
+from math import sqrt, log10, floor
 import matplotlib.pyplot as plt
 
 def main(path: str, image_count: int, slices: int):
@@ -49,34 +49,51 @@ def main(path: str, image_count: int, slices: int):
     signal_mean = [np.nanmean(i) for i in signal_mean_values]
 
     # calculating the standard deviation for signal
-    signal_standarddeviation = [get_standard_deviation(signal_mean_values[i], signal_mean[i]) for i in range_slices]
+    signal_standard_deviation = [get_standard_deviation(signal_mean_values[i], signal_mean[i]) for i in range_slices]
 
     # calculating SNR (SignalNoiseRatio)
     snr = [[get_snr(signal_mean_values[k][i], noise_mean_values[k][i]) for i in range_image_count] for k in range_slices]
-    print(signal_mean_values[0][0])
+
     # plotting the data
-    range_image_count1 = range(image_count + 1)[1:] # array for the length of the y-axis
-    fig, ax = plt.subplots(slices, 2, sharex='col', sharey='col')
+    fig, ax = plt.subplots(slices + 1, 2, sharex='col', sharey='col')
     for k in range_slices:
         mean = signal_mean[k]
-        ax[k, 0].plot(range_image_count1, signal_mean_values[k], "b.-")
-        ax[k, 0].plot(range_image_count1, [mean for _ in range_image_count], "m-") # mean
-        ax[k, 0].plot(range_image_count1, [mean + signal_standarddeviation[k] for _ in range_image_count], "y-") # standart deviation upper
-        ax[k, 0].plot(range_image_count1, [mean - signal_standarddeviation[k] for _ in range_image_count], "y-") # standart deviation lower
+        ax[k, 0].plot(range_image_count, signal_mean_values[k], 'b.-')
+        ax[k, 0].plot(range_image_count, [mean for _ in range_image_count], 'm-') # mean
+        ax[k, 0].plot(range_image_count, [mean + signal_standard_deviation[k] for _ in range_image_count], 'y-') # standard deviation upper
+        ax[k, 0].plot(range_image_count, [mean - signal_standard_deviation[k] for _ in range_image_count], 'y-') # standard deviation lower
 
     for k in range_slices:
-        ax[k, 1].plot(range_image_count1, snr[k], "r.-")
+        ax[k, 1].plot(range_image_count, snr[k], 'r.-')
 
-    ax[0, 0].set_xlabel("scan")
+    merge_count = [2, 4]
+    signal_merged = [[] for i in range(len(merge_count))]
+    noise_merged = [[] for i in range(len(merge_count))]
+    for k in range(len(merge_count)):
+        for i in range(0, floor(image_count / merge_count[k]) * merge_count[k], merge_count[k]):
+            signal_merged[k].append(sum(signal_mean_values[1][i+j] for j in range(merge_count[k])) / merge_count[k])
+            noise_merged[k].append(sum(signal_mean_values[1][i+j] for j in range(merge_count[k])) / merge_count[k])
+
+    snr_merged = [[get_snr(signal_merged[j][i], noise_merged[j][i]) for i in range(floor(image_count / merge_count[j]))] for j in range(len(merge_count))]
+
+    for j in range(len(merge_count)):
+        ax[slices, 1].plot([i * merge_count[j] * 1.2 for i in range(floor(image_count / merge_count[j]))], snr_merged[j], 'g.-')
+
+    ax[0, 0].set_xlabel('scan')
     for k in range_slices:
-        ax[k, 0].set_ylabel(f"slice {k + 1}")
+        ax[k, 0].set_ylabel(f'slice {k}')
         for i in (0, 1):
-            ax[k, i].grid(axis="y")
+            ax[k, i].grid(axis='y')
+
+    ax[slices, 1].grid(axis='y')
+    ax[slices, 1].set_ylabel(f'slice 1\n{merge_count} merged')
+
     fig.suptitle('Plot')
+
+    print('Runtime: ', time() - start_time)
+
     plt.get_current_fig_manager().full_screen_toggle()
     plt.show()
-
-    print("Runtime: ", time() - start_time)
 
 def get_standard_deviation(values: list, mean=None, count=None):
     return sqrt(sum([(i-(mean if not mean else np.mean(values))) ** 2 for i in values]) / (count if count is not None else len(values)))
